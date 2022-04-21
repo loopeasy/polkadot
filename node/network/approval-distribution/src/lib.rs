@@ -347,8 +347,12 @@ enum PendingMessage {
 impl State {
 	async fn handle_network_msg(
 		&mut self,
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 		metrics: &Metrics,
 		event: NetworkBridgeEvent<net_protocol::ApprovalDistributionMessage>,
 		rng: &mut (impl CryptoRng + Rng),
@@ -406,8 +410,12 @@ impl State {
 
 	async fn handle_new_blocks(
 		&mut self,
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut impl overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 		metrics: &Metrics,
 		metas: Vec<BlockApprovalMeta>,
 		rng: &mut (impl CryptoRng + Rng),
@@ -549,8 +557,12 @@ impl State {
 
 	async fn process_incoming_peer_message(
 		&mut self,
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut impl overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 		metrics: &Metrics,
 		peer_id: PeerId,
 		msg: protocol_v1::ApprovalDistributionMessage,
@@ -641,8 +653,12 @@ impl State {
 	// and has an entry in the `PeerData` struct.
 	async fn handle_peer_view_change(
 		&mut self,
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut impl overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 		metrics: &Metrics,
 		peer_id: PeerId,
 		view: View,
@@ -716,8 +732,12 @@ impl State {
 
 	async fn import_and_circulate_assignment(
 		&mut self,
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut impl overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 		metrics: &Metrics,
 		source: MessageSource,
 		assignment: IndirectAssignmentCert,
@@ -975,8 +995,12 @@ impl State {
 
 	async fn import_and_circulate_approval(
 		&mut self,
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut impl overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 		metrics: &Metrics,
 		source: MessageSource,
 		vote: IndirectSignedApprovalVote,
@@ -1236,8 +1260,13 @@ impl State {
 	}
 
 	async fn unify_with_peer(
-		ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-		          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+		ctx: &mut impl overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
+		gossip_peers: &HashSet<PeerId>,
 		metrics: &Metrics,
 		entries: &mut HashMap<Hash, BlockEntry>,
 		topologies: &SessionGridTopologies,
@@ -1593,8 +1622,12 @@ async fn adjust_required_routing_and_propagate(
 
 /// Modify the reputation of a peer based on its behavior.
 async fn modify_reputation(
-	ctx: &mut (impl SubsystemContext<Message = ApprovalDistributionMessage>
-	          + overseer::SubsystemContext<Message = ApprovalDistributionMessage>),
+	ctx: &mut impl overseer::SubsystemContext<
+		Message = ApprovalDistributionMessage,
+		OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+		Signal = OverseerSignal,
+		Error = SubsystemError,
+	>,
 	peer_id: PeerId,
 	rep: Rep,
 ) {
@@ -1616,8 +1649,12 @@ impl ApprovalDistribution {
 
 	async fn run<Context>(self, ctx: Context)
 	where
-		Context: SubsystemContext<Message = ApprovalDistributionMessage>,
-		Context: overseer::SubsystemContext<Message = ApprovalDistributionMessage>,
+		Context: overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 	{
 		let mut state = State::default();
 
@@ -1632,10 +1669,15 @@ impl ApprovalDistribution {
 		self,
 		mut ctx: Context,
 		state: &mut State,
-		rng: &mut (impl CryptoRng + Rng),
-	) where
-		Context: SubsystemContext<Message = ApprovalDistributionMessage>,
-		Context: overseer::SubsystemContext<Message = ApprovalDistributionMessage>,
+		rng: &mut (impl CryptoRng + Rng)
+	)
+	where
+		Context: overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 	{
 		loop {
 			let message = match ctx.recv().await {
@@ -1672,8 +1714,12 @@ impl ApprovalDistribution {
 		metrics: &Metrics,
 		rng: &mut (impl CryptoRng + Rng),
 	) where
-		Context: SubsystemContext<Message = ApprovalDistributionMessage>,
-		Context: overseer::SubsystemContext<Message = ApprovalDistributionMessage>,
+		Context: overseer::SubsystemContext<
+			Message = ApprovalDistributionMessage,
+			OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+			Signal = OverseerSignal,
+			Error = SubsystemError,
+		>,
 	{
 		match msg {
 			ApprovalDistributionMessage::NetworkBridgeUpdate(event) => {
@@ -1719,8 +1765,12 @@ impl ApprovalDistribution {
 
 impl<Context> overseer::Subsystem<Context, SubsystemError> for ApprovalDistribution
 where
-	Context: SubsystemContext<Message = ApprovalDistributionMessage>,
-	Context: overseer::SubsystemContext<Message = ApprovalDistributionMessage>,
+	Context: overseer::SubsystemContext<
+		Message = ApprovalDistributionMessage,
+		OutgoingMessages = overseer::ApprovalDistributionOutgoingMessages,
+		Signal = OverseerSignal,
+		Error = SubsystemError,
+	>,
 {
 	fn start(self, ctx: Context) -> SpawnedSubsystem {
 		let future = self.run(ctx).map(|_| Ok(())).boxed();
