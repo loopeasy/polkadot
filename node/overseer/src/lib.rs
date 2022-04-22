@@ -417,10 +417,15 @@ pub async fn forward_events<P: BlockchainEvents<Block>>(client: Arc<P>, mut hand
 	network=NetworkBridgeEvent<VersionedValidationProtocol>,
 )]
 pub struct Overseer<SupportsParachains> {
-	#[subsystem(no_dispatch, CandidateValidationMessage, sends: [])]
+	#[subsystem(no_dispatch, CandidateValidationMessage, sends: [
+		RuntimeApiMessage,
+	])]
 	candidate_validation: CandidateValidation,
 
-	#[subsystem(no_dispatch, PvfCheckerMessage, sends: [CandidateValidationMessage, RuntimeApiMessage])]
+	#[subsystem(no_dispatch, PvfCheckerMessage, sends: [
+		CandidateValidationMessage,
+		RuntimeApiMessage,
+	])]
 	pvf_checker: PvfChecker,
 
 	#[subsystem(no_dispatch, CandidateBackingMessage, sends: [
@@ -435,10 +440,19 @@ pub struct Overseer<SupportsParachains> {
 	#[subsystem(StatementDistributionMessage, sends: [])]
 	statement_distribution: StatementDistribution,
 
-	#[subsystem(no_dispatch, AvailabilityDistributionMessage, sends: [])]
+	#[subsystem(no_dispatch, AvailabilityDistributionMessage, sends: [
+		AvailabilityStoreMessage,
+		AvailabilityRecoveryMessage,
+		ChainApiMessage,
+		RuntimeApiMessage,
+		NetworkBridgeMessage,
+	])]
 	availability_distribution: AvailabilityDistribution,
 
-	#[subsystem(no_dispatch, AvailabilityRecoveryMessage, sends: [])]
+	#[subsystem(no_dispatch, AvailabilityRecoveryMessage, sends: [
+		NetworkBridgeMessage,
+		RuntimeApiMessage,
+	])]
 	availability_recovery: AvailabilityRecovery,
 
 	#[subsystem(blocking, no_dispatch, BitfieldSigningMessage, sends: [])]
@@ -447,7 +461,12 @@ pub struct Overseer<SupportsParachains> {
 	#[subsystem(BitfieldDistributionMessage, sends: [])]
 	bitfield_distribution: BitfieldDistribution,
 
-	#[subsystem(no_dispatch, ProvisionerMessage, sends: [])]
+	#[subsystem(no_dispatch, ProvisionerMessage, sends: [
+		RuntimeApiMessage,
+		CandidateBackingMessage,
+		ChainApiMessage,
+		DisputeCoordinatorMessage,
+	])]
 	provisioner: Provisioner,
 
 	#[subsystem(no_dispatch, blocking, RuntimeApiMessage, sends: [])]
@@ -489,6 +508,10 @@ pub struct Overseer<SupportsParachains> {
 	#[subsystem(no_dispatch, blocking, DisputeCoordinatorMessage, sends: [
 		RuntimeApiMessage,
 		ChainApiMessage,
+		DisputeDistributionMessage,
+		CandidateValidationMessage,
+		AvailabilityStoreMessage,
+		AvailabilityRecoveryMessage,
 	])]
 	dispute_coordinator: DisputeCoordinator,
 
