@@ -23,7 +23,10 @@ use polkadot_node_subsystem_util::runtime::RuntimeInfo;
 use polkadot_primitives::v2::{
 	AuthorityDiscoveryId, GroupIndex, Hash, SessionIndex, ValidatorIndex,
 };
-use polkadot_subsystem::SubsystemContext;
+use polkadot_subsystem::{
+	overseer,
+	SubsystemContext,
+};
 
 use crate::{
 	error::{Error, Result},
@@ -103,7 +106,7 @@ impl SessionCache {
 		with_info: F,
 	) -> Result<Option<R>>
 	where
-		Context: SubsystemContext,
+		Context: overseer::AvailabilityDistributionContextTrait,
 		F: FnOnce(&SessionInfo) -> R,
 	{
 		if let Some(o_info) = self.session_info_cache.get(&session_index) {
@@ -180,7 +183,7 @@ impl SessionCache {
 		session_index: SessionIndex,
 	) -> Result<Option<SessionInfo>>
 	where
-		Context: SubsystemContext,
+		Context: overseer::AvailabilityDistributionContextTrait,
 	{
 		let info = runtime
 			.get_session_info_by_index(ctx.sender(), relay_parent, session_index)
