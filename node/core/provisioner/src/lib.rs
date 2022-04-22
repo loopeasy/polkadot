@@ -164,7 +164,7 @@ impl JobTrait for ProvisionerJob {
 	/// Run a job for the parent block indicated
 	//
 	// this function is in charge of creating and executing the job's main loop
-	fn run<S: SubsystemSender>(
+	fn run<S: overseer::ProvisionerSenderTrait>(
 		leaf: ActivatedLeaf,
 		_: Self::RunArgs,
 		metrics: Self::Metrics,
@@ -201,7 +201,7 @@ impl ProvisionerJob {
 
 	async fn run_loop(
 		mut self,
-		sender: &mut impl SubsystemSender,
+		sender: &mut impl overseer::ProvisionerSenderTrait,
 		span: PerLeafSpan,
 	) -> Result<(), Error> {
 		loop {
@@ -240,7 +240,7 @@ impl ProvisionerJob {
 
 	async fn send_inherent_data(
 		&mut self,
-		sender: &mut impl SubsystemSender,
+		sender: &mut impl overseer::ProvisionerSenderTrait,
 		return_senders: Vec<oneshot::Sender<ProvisionerInherentData>>,
 	) {
 		if let Err(err) = send_inherent_data(
@@ -318,7 +318,7 @@ async fn send_inherent_data(
 	bitfields: &[SignedAvailabilityBitfield],
 	candidates: &[CandidateReceipt],
 	return_senders: Vec<oneshot::Sender<ProvisionerInherentData>>,
-	from_job: &mut impl SubsystemSender,
+	from_job: &mut impl overseer::ProvisionerSenderTrait,
 	metrics: &Metrics,
 ) -> Result<(), Error> {
 	let availability_cores = request_availability_cores(leaf.hash, from_job)
@@ -437,7 +437,7 @@ async fn select_candidates(
 	bitfields: &[SignedAvailabilityBitfield],
 	candidates: &[CandidateReceipt],
 	relay_parent: Hash,
-	sender: &mut impl SubsystemSender,
+	sender: &mut impl overseer::ProvisionerSenderTrait,
 ) -> Result<Vec<BackedCandidate>, Error> {
 	let block_number = get_block_number_under_construction(relay_parent, sender).await?;
 
@@ -521,7 +521,6 @@ async fn select_candidates(
 				selected_candidates.clone(),
 				tx,
 			)
-			.into(),
 		)
 		.await;
 	let mut candidates = rx.await.map_err(|err| Error::CanceledBackedCandidates(err))?;
@@ -573,10 +572,10 @@ async fn select_candidates(
 /// in the event of an invalid `relay_parent`, returns `Ok(0)`
 async fn get_block_number_under_construction(
 	relay_parent: Hash,
-	sender: &mut impl SubsystemSender,
+	sender: &mut impl overseer::ProvisionerSenderTrait,
 ) -> Result<BlockNumber, Error> {
 	let (tx, rx) = oneshot::channel();
-	sender.send_message(ChainApiMessage::BlockNumber(relay_parent, tx).into()).await;
+	sender.send_message(ChainApiMessage::BlockNumber(relay_parent, tx)).await;
 
 	match rx.await.map_err(|err| Error::CanceledBlockNumber(err))? {
 		Ok(Some(n)) => Ok(n + 1),
@@ -634,7 +633,7 @@ enum RequestType {
 
 /// Request open disputes identified by `CandidateHash` and the `SessionIndex`.
 async fn request_disputes(
-	sender: &mut impl SubsystemSender,
+	sender: &mut impl overseer::ProvisionerSenderTrait,
 	active_or_recent: RequestType,
 ) -> Vec<(SessionIndex, CandidateHash)> {
 	let (tx, rx) = oneshot::channel();
@@ -642,7 +641,7 @@ async fn request_disputes(
 		RequestType::Recent => DisputeCoordinatorMessage::RecentDisputes(tx),
 		RequestType::Active => DisputeCoordinatorMessage::ActiveDisputes(tx),
 	};
-	sender.send_message(msg.into()).await;
+	sender.send_message(msg).await;
 
 	let recent_disputes = match rx.await {
 		Ok(r) => r,
@@ -656,12 +655,12 @@ async fn request_disputes(
 
 /// Request the relevant dispute statements for a set of disputes identified by `CandidateHash` and the `SessionIndex`.
 async fn request_votes(
-	sender: &mut impl SubsystemSender,
+	sender: &mut impl overseer::ProvisionerSenderTrait,
 	disputes_to_query: Vec<(SessionIndex, CandidateHash)>,
 ) -> Vec<(SessionIndex, CandidateHash, CandidateVotes)> {
 	let (tx, rx) = oneshot::channel();
 	sender
-		.send_message(DisputeCoordinatorMessage::QueryCandidateVotes(disputes_to_query, tx).into())
+		.send_message(DisputeCoordinatorMessage::QueryCandidateVotes(disputes_to_query, tx))
 		.await;
 
 	match rx.await {
@@ -702,7 +701,7 @@ fn extend_by_random_subset_without_repetition(
 }
 
 async fn select_disputes(
-	sender: &mut impl SubsystemSender,
+	sender: &mut impl overseer::ProvisionerSenderTrait,
 	metrics: &metrics::Metrics,
 ) -> Result<MultiDisputeStatementSet, Error> {
 	const MAX_DISPUTES_FORWARDED_TO_RUNTIME: usize = 1_000;
