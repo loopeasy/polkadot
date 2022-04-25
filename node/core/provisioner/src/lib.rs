@@ -94,17 +94,6 @@ impl InherentAfter {
 	}
 }
 
-/// A per-relay-parent job for the provisioning subsystem.
-pub struct ProvisionerJob {
-	leaf: ActivatedLeaf,
-	receiver: mpsc::Receiver<ProvisionerMessage>,
-	backed_candidates: Vec<CandidateReceipt>,
-	signed_bitfields: Vec<SignedAvailabilityBitfield>,
-	metrics: Metrics,
-	inherent_after: InherentAfter,
-	awaiting_inherent: Vec<oneshot::Sender<ProvisionerInherentData>>,
-}
-
 /// Errors in the provisioner.
 #[derive(Debug, Error)]
 #[allow(missing_docs)]
@@ -152,6 +141,17 @@ pub enum Error {
 #[derive(Debug, Clone, Copy)]
 pub struct ProvisionerConfig;
 
+/// A per-relay-parent job for the provisioning subsystem.
+pub struct ProvisionerJob {
+	leaf: ActivatedLeaf,
+	receiver: mpsc::Receiver<ProvisionerMessage>,
+	backed_candidates: Vec<CandidateReceipt>,
+	signed_bitfields: Vec<SignedAvailabilityBitfield>,
+	metrics: Metrics,
+	inherent_after: InherentAfter,
+	awaiting_inherent: Vec<oneshot::Sender<ProvisionerInherentData>>,
+}
+
 impl JobTrait for ProvisionerJob {
 	type ToJob = ProvisionerMessage;
 	type OutgoingMessages = overseer::ProvisionerOutgoingMessages;
@@ -164,18 +164,18 @@ impl JobTrait for ProvisionerJob {
 	/// Run a job for the parent block indicated
 	//
 	// this function is in charge of creating and executing the job's main loop
-	fn run<S: overseer::ProvisionerSenderTrait>(
+	fn run<Sender: overseer::ProvisionerSenderTrait>(
 		leaf: ActivatedLeaf,
 		_: Self::RunArgs,
 		metrics: Self::Metrics,
 		receiver: mpsc::Receiver<ProvisionerMessage>,
-		mut sender: JobSender<S>,
+		mut sender: JobSender<Sender>,
 	) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>> + Send>> {
 		let span = leaf.span.clone();
 		async move {
-			let job = ProvisionerJob::new(leaf, metrics, receiver);
+\			let job = ProvisionerJob::new(leaf, metrics, receiver);
 
-			job.run_loop(sender.subsystem_sender(), PerLeafSpan::new(span, "provisioner"))
+			job.run_loop::<Sender>(sender.subsystem_sender(), PerLeafSpan::new(span, "provisioner"))
 				.await
 		}
 		.boxed()
@@ -199,9 +199,9 @@ impl ProvisionerJob {
 		}
 	}
 
-	async fn run_loop(
+	async fn run_loop<Sender: overseer::ProvisionerSenderTrait>(
 		mut self,
-		sender: &mut impl overseer::ProvisionerSenderTrait,
+		sender: &mut Sender,
 		span: PerLeafSpan,
 	) -> Result<(), Error> {
 		loop {
@@ -238,9 +238,9 @@ impl ProvisionerJob {
 		Ok(())
 	}
 
-	async fn send_inherent_data(
+	async fn send_inherent_data<Sender: overseer::ProvisionerSenderTrait> (
 		&mut self,
-		sender: &mut impl overseer::ProvisionerSenderTrait,
+		sender: &mut Sender,
 		return_senders: Vec<oneshot::Sender<ProvisionerInherentData>>,
 	) {
 		if let Err(err) = send_inherent_data(
