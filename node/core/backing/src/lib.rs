@@ -46,7 +46,7 @@ use polkadot_primitives::v2::{
 use polkadot_subsystem::{
 	jaeger,
 	messages::{
-		AllMessages, AvailabilityDistributionMessage, AvailabilityStoreMessage,
+		AvailabilityDistributionMessage, AvailabilityStoreMessage,
 		CandidateBackingMessage, CandidateValidationMessage, CollatorProtocolMessage,
 		DisputeCoordinatorMessage, ProvisionableData, ProvisionerMessage, RuntimeApiRequest,
 		StatementDistributionMessage,
