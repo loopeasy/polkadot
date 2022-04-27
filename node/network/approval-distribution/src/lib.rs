@@ -446,12 +446,12 @@ impl State {
 		);
 
 		{
+			let mut sender = ctx.sender();
 			for (peer_id, view) in self.peer_views.iter() {
 				let intersection = view.iter().filter(|h| new_hashes.contains(h));
 				let view_intersection = View::new(intersection.cloned(), view.finalized_number);
 				Self::unify_with_peer(
-					ctx,
-					&self.peer_views,
+					sender,
 					metrics,
 					&mut self.blocks,
 					&self.topologies,
@@ -669,8 +669,7 @@ impl State {
 		}
 
 		Self::unify_with_peer(
-			ctx,
-			&self.peer_views,
+			ctx.sender(),
 			metrics,
 			&mut self.blocks,
 			&self.topologies,
@@ -1230,8 +1229,7 @@ impl State {
 	}
 
 	async fn unify_with_peer(
-		ctx: &mut impl overseer::ApprovalDistributionContextTrait,
-		gossip_peers: &HashSet<PeerId>,
+		sender: &mut impl overseer::ApprovalDistributionSenderTrait,
 		metrics: &Metrics,
 		entries: &mut HashMap<Hash, BlockEntry>,
 		topologies: &SessionGridTopologies,
@@ -1347,7 +1345,7 @@ impl State {
 				"Sending assignments to unified peer",
 			);
 
-			ctx.send_message(NetworkBridgeMessage::SendValidationMessage(
+			sender.send_message(NetworkBridgeMessage::SendValidationMessage(
 				vec![peer_id.clone()],
 				Versioned::V1(protocol_v1::ValidationProtocol::ApprovalDistribution(
 					protocol_v1::ApprovalDistributionMessage::Assignments(assignments_to_send),
@@ -1364,7 +1362,7 @@ impl State {
 				"Sending approvals to unified peer",
 			);
 
-			ctx.send_message(NetworkBridgeMessage::SendValidationMessage(
+			sender.send_message(NetworkBridgeMessage::SendValidationMessage(
 				vec![peer_id],
 				Versioned::V1(protocol_v1::ValidationProtocol::ApprovalDistribution(
 					protocol_v1::ApprovalDistributionMessage::Approvals(approvals_to_send),
@@ -1661,7 +1659,8 @@ impl ApprovalDistribution {
 		msg: ApprovalDistributionMessage,
 		metrics: &Metrics,
 		rng: &mut (impl CryptoRng + Rng),
-	) where
+	)
+	where
 		Context: overseer::ApprovalDistributionContextTrait,
 	{
 		match msg {
