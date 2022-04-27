@@ -500,6 +500,8 @@ pub struct Overseer<SupportsParachains> {
 		BitfieldDistributionMessage,
 		GossipSupportMessage,
 		DisputeDistributionMessage,
+		CollationGenerationMessage,
+		CollatorProtocolMessage,
 	])]
 	network_bridge: NetworkBridge,
 
