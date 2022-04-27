@@ -30,11 +30,7 @@ use polkadot_node_subsystem_util::{metrics, runtime::RuntimeInfo};
 use polkadot_primitives::v2::{
 	AuthorityDiscoveryId, CandidateHash, Hash, SessionIndex, ValidatorIndex,
 };
-use polkadot_subsystem::{
-	overseer,
-	messages::{NetworkBridgeMessage},
-	SubsystemContext,
-};
+use polkadot_subsystem::{messages::NetworkBridgeMessage, overseer, SubsystemContext};
 
 use super::error::{FatalError, Result};
 

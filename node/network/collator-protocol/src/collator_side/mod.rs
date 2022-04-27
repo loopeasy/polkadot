@@ -47,7 +47,9 @@ use polkadot_primitives::v2::{
 };
 use polkadot_subsystem::{
 	jaeger,
-	messages::{RuntimeApiMessage, CollatorProtocolMessage, NetworkBridgeEvent, NetworkBridgeMessage},
+	messages::{
+		CollatorProtocolMessage, NetworkBridgeEvent, NetworkBridgeMessage, RuntimeApiMessage,
+	},
 	overseer, FromOverseer, OverseerSignal, PerLeafSpan, SubsystemContext,
 };
 
@@ -464,8 +466,7 @@ async fn determine_core(
 	sender: &mut impl overseer::SubsystemSender<RuntimeApiMessage>,
 	para_id: ParaId,
 	relay_parent: Hash,
-) -> Result<Option<(CoreIndex, usize)>>
-{
+) -> Result<Option<(CoreIndex, usize)>> {
 	let cores = get_availability_cores(sender, relay_parent).await?;
 
 	for (idx, core) in cores.iter().enumerate() {

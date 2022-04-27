@@ -600,13 +600,21 @@ impl State {
 		let session_window = self.session_window.take();
 		match session_window {
 			None => {
-				self.session_window =
-					Some(RollingSessionWindow::new::<Context::Sender>(ctx.sender().clone(), APPROVAL_SESSIONS, head).await?);
+				self.session_window = Some(
+					RollingSessionWindow::new::<Context::Sender>(
+						ctx.sender().clone(),
+						APPROVAL_SESSIONS,
+						head,
+					)
+					.await?,
+				);
 				Ok(None)
 			},
 			Some(mut session_window) => {
-				let r =
-					session_window.cache_session_info_for_head(ctx.sender(), head).await.map(Option::Some);
+				let r = session_window
+					.cache_session_info_for_head(ctx.sender(), head)
+					.await
+					.map(Option::Some);
 				self.session_window = Some(session_window);
 				r
 			},
@@ -2230,14 +2238,12 @@ async fn launch_approval(
 						);
 
 						sender
-							.send_message(
-								DisputeCoordinatorMessage::IssueLocalStatement(
-									session_index,
-									candidate_hash,
-									candidate.clone(),
-									false,
-								)
-							)
+							.send_message(DisputeCoordinatorMessage::IssueLocalStatement(
+								session_index,
+								candidate_hash,
+								candidate.clone(),
+								false,
+							))
 							.await;
 						metrics_guard.take().on_approval_invalid();
 					},
@@ -2268,16 +2274,14 @@ async fn launch_approval(
 		let (val_tx, val_rx) = oneshot::channel();
 
 		sender
-			.send_message(
-				CandidateValidationMessage::ValidateFromExhaustive(
-					available_data.validation_data,
-					validation_code,
-					candidate.clone(),
-					available_data.pov,
-					APPROVAL_EXECUTION_TIMEOUT,
-					val_tx,
-				)
-			)
+			.send_message(CandidateValidationMessage::ValidateFromExhaustive(
+				available_data.validation_data,
+				validation_code,
+				candidate.clone(),
+				available_data.pov,
+				APPROVAL_EXECUTION_TIMEOUT,
+				val_tx,
+			))
 			.await;
 
 		match val_rx.await {
@@ -2295,14 +2299,12 @@ async fn launch_approval(
 				} else {
 					// Commitments mismatch - issue a dispute.
 					sender
-						.send_message(
-							DisputeCoordinatorMessage::IssueLocalStatement(
-								session_index,
-								candidate_hash,
-								candidate.clone(),
-								false,
-							)
-						)
+						.send_message(DisputeCoordinatorMessage::IssueLocalStatement(
+							session_index,
+							candidate_hash,
+							candidate.clone(),
+							false,
+						))
 						.await;
 
 					metrics_guard.take().on_approval_invalid();
@@ -2319,14 +2321,12 @@ async fn launch_approval(
 				);
 
 				sender
-					.send_message(
-						DisputeCoordinatorMessage::IssueLocalStatement(
-							session_index,
-							candidate_hash,
-							candidate.clone(),
-							false,
-						)
-					)
+					.send_message(DisputeCoordinatorMessage::IssueLocalStatement(
+						session_index,
+						candidate_hash,
+						candidate.clone(),
+						false,
+					))
 					.await;
 
 				metrics_guard.take().on_approval_invalid();
@@ -2514,14 +2514,14 @@ where
 	metrics.on_approval_produced();
 
 	// dispatch to approval distribution.
-	ctx.send_unbounded_message(
-		ApprovalDistributionMessage::DistributeApproval(IndirectSignedApprovalVote {
+	ctx.send_unbounded_message(ApprovalDistributionMessage::DistributeApproval(
+		IndirectSignedApprovalVote {
 			block_hash,
 			candidate_index: candidate_index as _,
 			validator: validator_index,
 			signature: sig,
-		})
-	);
+		},
+	));
 
 	// dispatch to dispute coordinator.
 	actions.extend(inform_disputes_action);

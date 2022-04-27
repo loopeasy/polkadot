@@ -33,10 +33,9 @@ use polkadot_primitives::v2::{
 	SessionIndex,
 };
 use polkadot_subsystem::{
-	overseer,
 	jaeger,
 	messages::{AllMessages, AvailabilityStoreMessage, IfDisconnected, NetworkBridgeMessage},
-	SubsystemContext,
+	overseer, SubsystemContext,
 };
 
 use crate::{
@@ -335,7 +334,8 @@ impl RunningTask {
 
 		self.sender
 			.send(FromFetchTask::Message(
-				NetworkBridgeMessage::SendRequests(vec![requests], IfDisconnected::ImmediateError).into()
+				NetworkBridgeMessage::SendRequests(vec![requests], IfDisconnected::ImmediateError)
+					.into(),
 			))
 			.await
 			.map_err(|_| TaskError::ShuttingDown)?;
@@ -419,7 +419,8 @@ impl RunningTask {
 					candidate_hash: self.request.candidate_hash,
 					chunk,
 					tx,
-				}.into()
+				}
+				.into(),
 			))
 			.await;
 		if let Err(err) = r {

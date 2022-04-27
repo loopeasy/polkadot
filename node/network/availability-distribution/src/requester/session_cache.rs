@@ -23,10 +23,7 @@ use polkadot_node_subsystem_util::runtime::RuntimeInfo;
 use polkadot_primitives::v2::{
 	AuthorityDiscoveryId, GroupIndex, Hash, SessionIndex, ValidatorIndex,
 };
-use polkadot_subsystem::{
-	overseer,
-	SubsystemContext,
-};
+use polkadot_subsystem::{overseer, SubsystemContext};
 
 use crate::{
 	error::{Error, Result},

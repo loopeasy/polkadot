@@ -172,7 +172,7 @@ impl BitfieldDistribution {
 	/// Start processing work as passed on from the Overseer.
 	async fn run<Context>(self, mut ctx: Context)
 	where
-	Context: overseer::BitfieldDistributionContextTrait,
+		Context: overseer::BitfieldDistributionContextTrait,
 	{
 		// work: process incoming messages from the overseer and process accordingly.
 		let mut state = ProtocolState::default();
@@ -277,8 +277,7 @@ async fn handle_bitfield_distribution<Context>(
 	metrics: &Metrics,
 	relay_parent: Hash,
 	signed_availability: SignedAvailabilityBitfield,
-)
-where
+) where
 	Context: overseer::BitfieldDistributionContextTrait,
 {
 	let _timer = metrics.time_handle_bitfield_distribution();
@@ -329,8 +328,7 @@ async fn relay_message<Context>(
 	peer_views: &mut HashMap<PeerId, View>,
 	validator: ValidatorId,
 	message: BitfieldGossipMessage,
-)
-where
+) where
 	Context: overseer::BitfieldDistributionContextTrait,
 {
 	let relay_parent = message.relay_parent;
@@ -404,8 +402,7 @@ async fn process_incoming_peer_message<Context>(
 	metrics: &Metrics,
 	origin: PeerId,
 	message: protocol_v1::BitfieldDistributionMessage,
-)
-where
+) where
 	Context: overseer::BitfieldDistributionContextTrait,
 {
 	let protocol_v1::BitfieldDistributionMessage::Bitfield(relay_parent, bitfield) = message;
@@ -510,8 +507,7 @@ async fn handle_network_msg<Context>(
 	state: &mut ProtocolState,
 	metrics: &Metrics,
 	bridge_message: NetworkBridgeEvent<net_protocol::BitfieldDistributionMessage>,
-)
-where
+) where
 	Context: overseer::BitfieldDistributionContextTrait,
 {
 	let _timer = metrics.time_handle_network_msg();
@@ -588,8 +584,7 @@ async fn handle_peer_view_change<Context>(
 	state: &mut ProtocolState,
 	origin: PeerId,
 	view: View,
-)
-where
+) where
 	Context: overseer::BitfieldDistributionContextTrait,
 {
 	let added = state
@@ -646,8 +641,7 @@ async fn send_tracked_gossip_message<Context>(
 	dest: PeerId,
 	validator: ValidatorId,
 	message: BitfieldGossipMessage,
-)
-where
+) where
 	Context: overseer::BitfieldDistributionContextTrait,
 {
 	let job_data = if let Some(job_data) = state.per_relay_parent.get_mut(&message.relay_parent) {

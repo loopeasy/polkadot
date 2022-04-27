@@ -23,9 +23,8 @@ use polkadot_node_primitives::{CandidateVotes, DisputeMessage, SignedDisputeStat
 use polkadot_node_subsystem_util::runtime::RuntimeInfo;
 use polkadot_primitives::v2::{CandidateHash, DisputeStatement, Hash, SessionIndex};
 use polkadot_subsystem::{
-	overseer,
 	messages::{AllMessages, DisputeCoordinatorMessage},
-	ActiveLeavesUpdate, SubsystemContext,
+	overseer, ActiveLeavesUpdate, SubsystemContext,
 };
 
 /// For each ongoing dispute we have a `SendTask` which takes care of it.
@@ -359,10 +358,7 @@ where
 	Context: overseer::DisputeDistributionContextTrait,
 {
 	let (tx, rx) = oneshot::channel();
-	ctx.send_message(DisputeCoordinatorMessage::ActiveDisputes(
-		tx,
-	))
-	.await;
+	ctx.send_message(DisputeCoordinatorMessage::ActiveDisputes(tx)).await;
 	rx.await.map_err(|_| JfyiError::AskActiveDisputesCanceled)
 }
 
@@ -376,9 +372,10 @@ where
 	Context: overseer::DisputeDistributionContextTrait,
 {
 	let (tx, rx) = oneshot::channel();
-	ctx.send_message(
-		DisputeCoordinatorMessage::QueryCandidateVotes(vec![(session_index, candidate_hash)], tx),
-	)
+	ctx.send_message(DisputeCoordinatorMessage::QueryCandidateVotes(
+		vec![(session_index, candidate_hash)],
+		tx,
+	))
 	.await;
 	rx.await
 		.map(|v| v.get(0).map(|inner| inner.to_owned().2))
