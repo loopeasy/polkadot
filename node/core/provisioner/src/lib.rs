@@ -159,6 +159,7 @@ where
 {
 	type ToJob = ProvisionerMessage;
 	type OutgoingMessages = overseer::ProvisionerOutgoingMessages;
+	type Sender = Sender;
 	type Error = Error;
 	type RunArgs = ProvisionerConfig;
 	type Metrics = Metrics;
@@ -781,12 +782,8 @@ async fn select_disputes(
 }
 
 /// The provisioner subsystem.
-pub type ProvisionerSubsystem<Spawner> =
+pub type ProvisionerSubsystem<Spawner, Sender> =
 	JobSubsystem<
-		ProvisionerJob<
-			overseer::OverseerSender<
-				overseer::ProvisionerOutgoingMessages
-			>
-		>,
-		Spawner
+		ProvisionerJob<Sender>,
+		Spawner,
 	>;
