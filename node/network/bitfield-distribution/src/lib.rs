@@ -173,6 +173,8 @@ impl BitfieldDistribution {
 	async fn run<Context>(self, mut ctx: Context)
 	where
 		Context: overseer::BitfieldDistributionContextTrait,
+		<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+			overseer::BitfieldDistributionSenderTrait,
 	{
 		// work: process incoming messages from the overseer and process accordingly.
 		let mut state = ProtocolState::default();
@@ -262,6 +264,8 @@ impl BitfieldDistribution {
 async fn modify_reputation<Context>(ctx: &mut Context, relay_parent: Hash, peer: PeerId, rep: Rep)
 where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	gum::trace!(target: LOG_TARGET, ?relay_parent, ?rep, %peer, "reputation change");
 
@@ -279,6 +283,8 @@ async fn handle_bitfield_distribution<Context>(
 	signed_availability: SignedAvailabilityBitfield,
 ) where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let _timer = metrics.time_handle_bitfield_distribution();
 
@@ -330,6 +336,8 @@ async fn relay_message<Context>(
 	message: BitfieldGossipMessage,
 ) where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let relay_parent = message.relay_parent;
 	let span = job_data.span.child("relay-msg");
@@ -404,6 +412,8 @@ async fn process_incoming_peer_message<Context>(
 	message: protocol_v1::BitfieldDistributionMessage,
 ) where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let protocol_v1::BitfieldDistributionMessage::Bitfield(relay_parent, bitfield) = message;
 	gum::trace!(
@@ -509,6 +519,8 @@ async fn handle_network_msg<Context>(
 	bridge_message: NetworkBridgeEvent<net_protocol::BitfieldDistributionMessage>,
 ) where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let _timer = metrics.time_handle_network_msg();
 
@@ -586,6 +598,8 @@ async fn handle_peer_view_change<Context>(
 	view: View,
 ) where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let added = state
 		.peer_views
@@ -643,6 +657,8 @@ async fn send_tracked_gossip_message<Context>(
 	message: BitfieldGossipMessage,
 ) where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let job_data = if let Some(job_data) = state.per_relay_parent.get_mut(&message.relay_parent) {
 		job_data
@@ -675,6 +691,8 @@ async fn send_tracked_gossip_message<Context>(
 impl<Context> overseer::Subsystem<Context, SubsystemError> for BitfieldDistribution
 where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	fn start(self, ctx: Context) -> SpawnedSubsystem {
 		let future = self.run(ctx).map(|_| Ok(())).boxed();
@@ -690,6 +708,8 @@ async fn query_basics<Context>(
 ) -> SubsystemResult<Option<(Vec<ValidatorId>, SigningContext)>>
 where
 	Context: overseer::BitfieldDistributionContextTrait,
+	<Context as overseer::BitfieldDistributionContextTrait>::Sender:
+		overseer::BitfieldDistributionSenderTrait,
 {
 	let (validators_tx, validators_rx) = oneshot::channel();
 	let (session_tx, session_rx) = oneshot::channel();
