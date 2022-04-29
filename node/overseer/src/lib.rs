@@ -417,18 +417,18 @@ pub async fn forward_events<P: BlockchainEvents<Block>>(client: Arc<P>, mut hand
 	network=NetworkBridgeEvent<VersionedValidationProtocol>,
 )]
 pub struct Overseer<SupportsParachains> {
-	#[subsystem(no_dispatch, CandidateValidationMessage, sends: [
+	#[subsystem(CandidateValidationMessage, sends: [
 		RuntimeApiMessage,
 	])]
 	candidate_validation: CandidateValidation,
 
-	#[subsystem(no_dispatch, PvfCheckerMessage, sends: [
+	#[subsystem(PvfCheckerMessage, sends: [
 		CandidateValidationMessage,
 		RuntimeApiMessage,
 	])]
 	pvf_checker: PvfChecker,
 
-	#[subsystem(no_dispatch, CandidateBackingMessage, sends: [
+	#[subsystem(CandidateBackingMessage, sends: [
 		CandidateValidationMessage,
 		CollatorProtocolMessage,
 		AvailabilityDistributionMessage,
@@ -447,7 +447,7 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	statement_distribution: StatementDistribution,
 
-	#[subsystem(no_dispatch, AvailabilityDistributionMessage, sends: [
+	#[subsystem(AvailabilityDistributionMessage, sends: [
 		AvailabilityStoreMessage,
 		AvailabilityRecoveryMessage,
 		ChainApiMessage,
@@ -456,14 +456,14 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	availability_distribution: AvailabilityDistribution,
 
-	#[subsystem(no_dispatch, AvailabilityRecoveryMessage, sends: [
+	#[subsystem(AvailabilityRecoveryMessage, sends: [
 		NetworkBridgeMessage,
 		RuntimeApiMessage,
 		AvailabilityStoreMessage,
 	])]
 	availability_recovery: AvailabilityRecovery,
 
-	#[subsystem(blocking, no_dispatch, BitfieldSigningMessage, sends: [
+	#[subsystem(blocking, BitfieldSigningMessage, sends: [
 		AvailabilityStoreMessage,
 		RuntimeApiMessage,
 		BitfieldDistributionMessage,
@@ -477,7 +477,7 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	bitfield_distribution: BitfieldDistribution,
 
-	#[subsystem(no_dispatch, ProvisionerMessage, sends: [
+	#[subsystem(ProvisionerMessage, sends: [
 		RuntimeApiMessage,
 		CandidateBackingMessage,
 		ChainApiMessage,
@@ -485,16 +485,16 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	provisioner: Provisioner,
 
-	#[subsystem(no_dispatch, blocking, RuntimeApiMessage, sends: [])]
+	#[subsystem(blocking, RuntimeApiMessage, sends: [])]
 	runtime_api: RuntimeApi,
 
-	#[subsystem(no_dispatch, blocking, AvailabilityStoreMessage, sends: [
+	#[subsystem(blocking, AvailabilityStoreMessage, sends: [
 		ChainApiMessage,
 		RuntimeApiMessage,
 	])]
 	availability_store: AvailabilityStore,
 
-	#[subsystem(no_dispatch, NetworkBridgeMessage, sends: [
+	#[subsystem(NetworkBridgeMessage, sends: [
 		ApprovalDistributionMessage,
 		StatementDistributionMessage,
 		BitfieldDistributionMessage,
@@ -505,16 +505,16 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	network_bridge: NetworkBridge,
 
-	#[subsystem(no_dispatch, blocking, ChainApiMessage, sends: [])]
+	#[subsystem(blocking, ChainApiMessage, sends: [])]
 	chain_api: ChainApi,
 
-	#[subsystem(no_dispatch, CollationGenerationMessage, sends: [
+	#[subsystem(CollationGenerationMessage, sends: [
 		RuntimeApiMessage,
 		CollatorProtocolMessage,
 	])]
 	collation_generation: CollationGeneration,
 
-	#[subsystem(no_dispatch, CollatorProtocolMessage, sends: [
+	#[subsystem(CollatorProtocolMessage, sends: [
 		NetworkBridgeMessage,
 		RuntimeApiMessage,
 		CandidateBackingMessage,
@@ -527,7 +527,7 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	approval_distribution: ApprovalDistribution,
 
-	#[subsystem(no_dispatch, blocking, ApprovalVotingMessage, sends: [
+	#[subsystem(blocking, ApprovalVotingMessage, sends: [
 		RuntimeApiMessage,
 		ChainApiMessage,
 		ChainSelectionMessage,
@@ -545,7 +545,7 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	gossip_support: GossipSupport,
 
-	#[subsystem(no_dispatch, blocking, DisputeCoordinatorMessage, sends: [
+	#[subsystem(blocking, DisputeCoordinatorMessage, sends: [
 		RuntimeApiMessage,
 		ChainApiMessage,
 		DisputeDistributionMessage,
@@ -555,14 +555,14 @@ pub struct Overseer<SupportsParachains> {
 	])]
 	dispute_coordinator: DisputeCoordinator,
 
-	#[subsystem(no_dispatch, DisputeDistributionMessage, sends: [
+	#[subsystem(DisputeDistributionMessage, sends: [
 		RuntimeApiMessage,
 		DisputeCoordinatorMessage,
 		NetworkBridgeMessage,
 	])]
 	dispute_distribution: DisputeDistribution,
 
-	#[subsystem(no_dispatch, blocking, ChainSelectionMessage, sends: [ChainApiMessage])]
+	#[subsystem(blocking, ChainSelectionMessage, sends: [ChainApiMessage])]
 	chain_selection: ChainSelection,
 
 	/// External listeners waiting for a hash to be in the active-leave set.
