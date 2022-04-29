@@ -83,7 +83,7 @@ pub(crate) fn impl_builder(info: &OverseerInfo) -> proc_macro2::TokenStream {
 
 	// Helpers to use within quote! macros
 	let spawner_where_clause: syn::TypeParam = parse_quote! {
-			S: #support_crate ::SpawnNamed + Send,
+			S: #support_crate ::SpawnNamed + Send
 	};
 
 	// Field names and real types
@@ -302,11 +302,11 @@ pub(crate) fn impl_builder(info: &OverseerInfo) -> proc_macro2::TokenStream {
 		let outgoing_wrapper = format_ident!("{}OutgoingMessages", ssf.generic);
 		quote!{
 			#field_type:
-				#support_crate::Subsystem< #support_crate :: #subsystem_ctx_name, #error_ty>,
-			#support_crate :: #subsystem_ctx_name< #consumes >:
-				#subsystem_ctx_trait,
-			<#support_crate :: #subsystem_ctx_name as #subsystem_ctx_trait>::Sender:
+				#support_crate::Subsystem< #subsystem_ctx_name < #consumes>, #error_ty>,
+			<#subsystem_ctx_name< #consumes > as #subsystem_ctx_trait>::Sender:
 				#subsystem_sender_trait,
+			#subsystem_ctx_name< #consumes >:
+				#subsystem_ctx_trait,
 		}
 	}).fold(TokenStream::new(), |mut ts, addendum| {
 		ts.extend(addendum);
@@ -346,9 +346,9 @@ pub(crate) fn impl_builder(info: &OverseerInfo) -> proc_macro2::TokenStream {
 			}
 		}
 
-		impl<S, #( #baggage_generic_ty, )*> #overseer_name <S, #( #baggage_generic_ty, )*>
+		impl<S #(, #baggage_generic_ty )*> #overseer_name <S #(, #baggage_generic_ty)*>
 		where
-			#spawner_where_clause
+			#spawner_where_clause,
 		{
 			/// Create a new overseer utilizing the builder.
 			pub fn builder< #( #subsystem_generics),* >() ->
@@ -408,7 +408,8 @@ pub(crate) fn impl_builder(info: &OverseerInfo) -> proc_macro2::TokenStream {
 
 	ts.extend(quote!{
 		/// Builder pattern to create compile time safe construction path.
-		pub struct #builder <InitStateSpawner, #( #subsystem_passthrough_state_generics, )* #( #baggage_passthrough_state_generics, )*> {
+		pub struct #builder <InitStateSpawner, #( #subsystem_passthrough_state_generics, )* #( #baggage_passthrough_state_generics, )*>
+		{
 			#(
 				#subsystem_name: #subsystem_passthrough_state_generics,
 			)*
@@ -447,7 +448,7 @@ pub(crate) fn impl_builder(info: &OverseerInfo) -> proc_macro2::TokenStream {
 		impl<S, #( #subsystem_passthrough_state_generics, )* #( #baggage_passthrough_state_generics, )*>
 			#builder<Missing<S>, #( #subsystem_passthrough_state_generics, )* #( #baggage_passthrough_state_generics, )*>
 		where
-			#spawner_where_clause
+			#spawner_where_clause,
 		{
 			/// The `spawner` to use for spawning tasks.
 			pub fn spawner(self, spawner: S) -> #builder<Init<S>, #( #subsystem_passthrough_state_generics, )* #( #baggage_passthrough_state_generics, )*>
@@ -474,7 +475,7 @@ pub(crate) fn impl_builder(info: &OverseerInfo) -> proc_macro2::TokenStream {
 		// A builder specialization where all fields are set
 		impl<#initialized_builder_generics> #initialized_builder<#initialized_builder_generics>
 		where
-			#spawner_where_clause
+			#spawner_where_clause,
 			#builder_where_clause
 		{
 			/// Complete the construction and create the overseer type.
