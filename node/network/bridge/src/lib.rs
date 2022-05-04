@@ -124,12 +124,11 @@ impl<N, AD> NetworkBridge<N, AD> {
 	}
 }
 
-impl<Net, AD, Context> Subsystem<Context, SubsystemError> for NetworkBridge<Net, AD>
+#[overseer::subsystem(NetworkBridge, error = SubsystemError, prefix = self::overseer)]
+impl<Net, AD, Context> NetworkBridge<Net, AD>
 where
 	Net: Network + Sync,
 	AD: validator_discovery::AuthorityDiscovery + Clone,
-	Context: overseer::NetworkBridgeContextTrait,
-	<Context as overseer::NetworkBridgeContextTrait>::Sender: overseer::NetworkBridgeSenderTrait,
 {
 	fn start(mut self, ctx: Context) -> SpawnedSubsystem {
 		// The stream of networking events has to be created at initialization, otherwise the
@@ -186,6 +185,7 @@ enum Mode {
 	Active,
 }
 
+#[overseer::contextbounds(NetworkBridge, prefix = self::overseer)]
 async fn handle_subsystem_messages<Context, N, AD>(
 	mut ctx: Context,
 	mut network_service: N,
@@ -195,8 +195,6 @@ async fn handle_subsystem_messages<Context, N, AD>(
 	metrics: Metrics,
 ) -> Result<(), UnexpectedAbort>
 where
-	Context: overseer::NetworkBridgeContextTrait,
-	<Context as overseer::NetworkBridgeContextTrait>::Sender: overseer::NetworkBridgeSenderTrait,
 	N: Network,
 	AD: validator_discovery::AuthorityDiscovery + Clone,
 {
@@ -835,6 +833,7 @@ async fn handle_network_messages<AD: validator_discovery::AuthorityDiscovery>(
 /// #fn is_send<T: Send>();
 /// #is_send::<parking_lot::MutexGuard<'static, ()>();
 /// ```
+#[overseer::contextbounds(NetworkBridge, prefix = self::overseer)]
 async fn run_network<N, AD, Context>(
 	bridge: NetworkBridge<N, AD>,
 	mut ctx: Context,
@@ -843,8 +842,6 @@ async fn run_network<N, AD, Context>(
 where
 	N: Network,
 	AD: validator_discovery::AuthorityDiscovery + Clone,
-	Context: overseer::NetworkBridgeContextTrait,
-	<Context as overseer::NetworkBridgeContextTrait>::Sender: overseer::NetworkBridgeSenderTrait,
 {
 	let shared = Shared::default();
 
@@ -909,6 +906,7 @@ fn construct_view(
 	View::new(live_heads.take(MAX_VIEW_HEADS), finalized_number)
 }
 
+#[overseer::contextbounds(NetworkBridge, prefix = self::overseer)]
 fn update_our_view<Net, Context>(
 	net: &mut Net,
 	ctx: &mut Context,
@@ -918,8 +916,6 @@ fn update_our_view<Net, Context>(
 	metrics: &Metrics,
 ) where
 	Net: Network,
-	Context: overseer::NetworkBridgeContextTrait,
-	<Context as overseer::NetworkBridgeContextTrait>::Sender: overseer::NetworkBridgeSenderTrait,
 {
 	let new_view = construct_view(live_heads.iter().map(|v| v.hash), finalized_number);
 

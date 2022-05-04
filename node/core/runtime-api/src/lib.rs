@@ -92,12 +92,11 @@ impl<Client> RuntimeApiSubsystem<Client> {
 	}
 }
 
-impl<Client, Context> overseer::Subsystem<Context, SubsystemError> for RuntimeApiSubsystem<Client>
+#[overseer::subsystem(RuntimeApi, error = SubsystemError, prefix = self::overseer)]
+impl<Client, Context> RuntimeApiSubsystem<Client>
 where
 	Client: ProvideRuntimeApi<Block> + Send + 'static + Sync,
 	Client::Api: ParachainHost<Block> + BabeApi<Block> + AuthorityDiscoveryApi<Block>,
-	Context: overseer::RuntimeApiContextTrait,
-	<Context as overseer::RuntimeApiContextTrait>::Sender: overseer::RuntimeApiSenderTrait,
 {
 	fn start(self, ctx: Context) -> SpawnedSubsystem {
 		SpawnedSubsystem { future: run(ctx, self).boxed(), name: "runtime-api-subsystem" }
@@ -329,6 +328,7 @@ where
 	}
 }
 
+#[overseer::subsystem(RuntimeApi, error = SubsystemError, prefix = self::overseer)]
 async fn run<Client, Context>(
 	mut ctx: Context,
 	mut subsystem: RuntimeApiSubsystem<Client>,
@@ -336,8 +336,6 @@ async fn run<Client, Context>(
 where
 	Client: ProvideRuntimeApi<Block> + Send + Sync + 'static,
 	Client::Api: ParachainHost<Block> + BabeApi<Block> + AuthorityDiscoveryApi<Block>,
-	Context: overseer::RuntimeApiContextTrait,
-	<Context as overseer::RuntimeApiContextTrait>::Sender: overseer::RuntimeApiSenderTrait,
 {
 	loop {
 		select! {
