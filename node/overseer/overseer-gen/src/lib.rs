@@ -60,7 +60,7 @@
 #![deny(missing_docs)]
 #![deny(unused_crate_dependencies)]
 
-pub use polkadot_overseer_gen_proc_macro::{overlord, subsystem, contextbounds};
+pub use polkadot_overseer_gen_proc_macro::{contextbounds, overlord, subsystem};
 
 #[doc(hidden)]
 pub use gum;

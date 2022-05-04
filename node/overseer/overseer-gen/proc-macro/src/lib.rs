@@ -78,7 +78,6 @@ pub fn subsystem(
 		.into()
 }
 
-
 #[proc_macro_attribute]
 pub fn contextbounds(
 	attr: proc_macro::TokenStream,

@@ -131,7 +131,6 @@ where
 	}
 }
 
-
 #[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 impl<AD> DisputeDistributionSubsystem<AD>
 where
@@ -161,8 +160,7 @@ where
 	}
 
 	/// Start processing work as passed on from the Overseer.
-	async fn run<Context>(mut self, mut ctx: Context) -> std::result::Result<(), FatalError>
-	{
+	async fn run<Context>(mut self, mut ctx: Context) -> std::result::Result<(), FatalError> {
 		let receiver = DisputesReceiver::new(
 			ctx.sender().clone(),
 			self.req_receiver
@@ -205,8 +203,7 @@ where
 		&mut self,
 		ctx: &mut Context,
 		signal: OverseerSignal,
-	) -> Result<SignalResult>
-	{
+	) -> Result<SignalResult> {
 		match signal {
 			OverseerSignal::Conclude => return Ok(SignalResult::Conclude),
 			OverseerSignal::ActiveLeaves(update) => {
@@ -222,8 +219,7 @@ where
 		&mut self,
 		ctx: &mut Context,
 		msg: DisputeDistributionMessage,
-	) -> Result<()>
-	{
+	) -> Result<()> {
 		match msg {
 			DisputeDistributionMessage::SendDispute(dispute_msg) =>
 				self.disputes_sender.start_sender(ctx, &mut self.runtime, dispute_msg).await?,
@@ -246,8 +242,7 @@ impl MuxedMessage {
 	async fn receive<Context>(
 		ctx: &mut Context,
 		from_sender: &mut mpsc::Receiver<TaskFinish>,
-	) -> Self
-	{
+	) -> Self {
 		// We are only fusing here to make `select` happy, in reality we will quit if the stream
 		// ends.
 		let from_overseer = ctx.recv().fuse();

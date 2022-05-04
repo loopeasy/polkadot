@@ -23,8 +23,7 @@ use polkadot_node_primitives::{CandidateVotes, DisputeMessage, SignedDisputeStat
 use polkadot_node_subsystem_util::runtime::RuntimeInfo;
 use polkadot_primitives::v2::{CandidateHash, DisputeStatement, Hash, SessionIndex};
 use polkadot_subsystem::{
-	messages::DisputeCoordinatorMessage,
-	overseer, ActiveLeavesUpdate, SubsystemContext,
+	messages::DisputeCoordinatorMessage, overseer, ActiveLeavesUpdate, SubsystemContext,
 };
 
 /// For each ongoing dispute we have a `SendTask` which takes care of it.
@@ -66,7 +65,6 @@ pub struct DisputeSender {
 	metrics: Metrics,
 }
 
-
 #[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 impl DisputeSender {
 	/// Create a new `DisputeSender` which can be used to start dispute sendings.
@@ -86,8 +84,7 @@ impl DisputeSender {
 		ctx: &mut Context,
 		runtime: &mut RuntimeInfo,
 		msg: DisputeMessage,
-	) -> Result<()>
-	{
+	) -> Result<()> {
 		let req: DisputeRequest = msg.into();
 		let candidate_hash = req.0.candidate_receipt.hash();
 		match self.disputes.entry(candidate_hash) {
@@ -122,8 +119,7 @@ impl DisputeSender {
 		ctx: &mut Context,
 		runtime: &mut RuntimeInfo,
 		update: ActiveLeavesUpdate,
-	) -> Result<()>
-	{
+	) -> Result<()> {
 		let ActiveLeavesUpdate { activated, deactivated } = update;
 		let deactivated: HashSet<_> = deactivated.into_iter().collect();
 		self.active_heads.retain(|h| !deactivated.contains(h));
@@ -188,8 +184,7 @@ impl DisputeSender {
 		ctx: &mut Context,
 		runtime: &mut RuntimeInfo,
 		dispute: (SessionIndex, CandidateHash),
-	) -> Result<()>
-	{
+	) -> Result<()> {
 		let (session_index, candidate_hash) = dispute;
 		// A relay chain head is required as context for receiving session info information from runtime and
 		// storage. We will iterate `active_sessions` to find a suitable head. We assume that there is at
@@ -312,8 +307,7 @@ impl DisputeSender {
 		&mut self,
 		ctx: &mut Context,
 		runtime: &mut RuntimeInfo,
-	) -> Result<bool>
-	{
+	) -> Result<bool> {
 		let new_sessions = get_active_session_indices(ctx, runtime, &self.active_heads).await?;
 		let new_sessions_raw: HashSet<_> = new_sessions.keys().collect();
 		let old_sessions_raw: HashSet<_> = self.active_sessions.keys().collect();
@@ -332,8 +326,7 @@ async fn get_active_session_indices<Context>(
 	ctx: &mut Context,
 	runtime: &mut RuntimeInfo,
 	active_heads: &Vec<Hash>,
-) -> Result<HashMap<SessionIndex, Hash>>
-{
+) -> Result<HashMap<SessionIndex, Hash>> {
 	let mut indeces = HashMap::new();
 	// Iterate all heads we track as active and fetch the child' session indices.
 	for head in active_heads {
@@ -347,8 +340,7 @@ async fn get_active_session_indices<Context>(
 #[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 async fn get_active_disputes<Context>(
 	ctx: &mut Context,
-) -> JfyiErrorResult<Vec<(SessionIndex, CandidateHash)>>
-{
+) -> JfyiErrorResult<Vec<(SessionIndex, CandidateHash)>> {
 	let (tx, rx) = oneshot::channel();
 	ctx.send_message(DisputeCoordinatorMessage::ActiveDisputes(tx)).await;
 	rx.await.map_err(|_| JfyiError::AskActiveDisputesCanceled)
@@ -360,8 +352,7 @@ async fn get_candidate_votes<Context>(
 	ctx: &mut Context,
 	session_index: SessionIndex,
 	candidate_hash: CandidateHash,
-) -> JfyiErrorResult<Option<CandidateVotes>>
-{
+) -> JfyiErrorResult<Option<CandidateVotes>> {
 	let (tx, rx) = oneshot::channel();
 	ctx.send_message(DisputeCoordinatorMessage::QueryCandidateVotes(
 		vec![(session_index, candidate_hash)],

@@ -20,9 +20,8 @@ use syn::{parse2, parse_quote, punctuated::Punctuated, Result};
 
 use super::{parse::*, *};
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum MakeSubsystem{
+pub(crate) enum MakeSubsystem {
 	/// Impl `trait Subsystem` and apply the trait bounds to the `Context` generic.
 	///
 	/// Relevant to `impl Item` only.
@@ -31,7 +30,6 @@ pub(crate) enum MakeSubsystem{
 	AddContextTraitBounds,
 }
 
-
 pub(crate) fn impl_subsystem_context_trait_bounds(
 	attr: TokenStream,
 	orig: TokenStream,
@@ -39,12 +37,7 @@ pub(crate) fn impl_subsystem_context_trait_bounds(
 ) -> Result<proc_macro2::TokenStream> {
 	let args = parse2::<SubsystemAttrArgs>(attr.clone())?;
 	let span = args.span();
-	let SubsystemAttrArgs {
-		error_path,
-		 subsystem_ident,
-		 trait_prefix_path
-		 , .. } = args;
-
+	let SubsystemAttrArgs { error_path, subsystem_ident, trait_prefix_path, .. } = args;
 
 	let mut item = parse2::<syn::Item>(orig)?;
 
@@ -63,7 +56,7 @@ pub(crate) fn impl_subsystem_context_trait_bounds(
 			})
 		})?;
 
-	let trait_prefix_path = trait_prefix_path.unwrap_or_else(|| parse_quote!{ self });
+	let trait_prefix_path = trait_prefix_path.unwrap_or_else(|| parse_quote! { self });
 	if trait_prefix_path.segments.trailing_punct() {
 		return Err(syn::Error::new(trait_prefix_path.span(), "Must not end with `::`"))
 	}
@@ -78,14 +71,16 @@ pub(crate) fn impl_subsystem_context_trait_bounds(
 		<Context as #support_crate::SubsystemContext>::Sender: #trait_prefix_path::#subsystem_sender_trait,
 	};
 
-
 	let apply_ctx_bound_if_present = move |generics: &mut syn::Generics| -> bool {
-		if generics.params.iter().find(|generic| {
-			match generic {
+		if generics
+			.params
+			.iter()
+			.find(|generic| match generic {
 				syn::GenericParam::Type(ty) if ty.ident == "Context" => true,
 				_ => false,
-			}
-		}).is_some() {
+			})
+			.is_some()
+		{
 			let where_clause = generics.make_where_clause();
 			where_clause.predicates.extend(extra_where_predicates.clone());
 			true
@@ -98,7 +93,10 @@ pub(crate) fn impl_subsystem_context_trait_bounds(
 		syn::Item::Impl(ref mut struktured_impl) => {
 			if make_subsystem == MakeSubsystem::ImplSubsystemTrait {
 				let error_path = error_path.ok_or_else(|| {
-					syn::Error::new(span, "Must annotate the identical overseer error type via `error=..`.")
+					syn::Error::new(
+						span,
+						"Must annotate the identical overseer error type via `error=..`.",
+					)
 				})?;
 				// Only replace the subsystem trait if it's desired.
 				struktured_impl.trait_.replace((
@@ -128,14 +126,15 @@ pub(crate) fn impl_subsystem_context_trait_bounds(
 			}
 			apply_ctx_bound_if_present(&mut struktured_fn.sig.generics);
 		},
-		other => {
-			return Err(syn::Error::new(other.span(), "Macro can only be annotated on functions or struct implementations"))
-		},
+		other =>
+			return Err(syn::Error::new(
+				other.span(),
+				"Macro can only be annotated on functions or struct implementations",
+			)),
 	};
 
 	Ok(item.to_token_stream())
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -143,9 +142,9 @@ mod tests {
 
 	#[test]
 	fn is_path() {
-		let _p: Path = parse_quote!{ self };
-		let _p: Path = parse_quote!{ crate };
-		let _p: Path = parse_quote!{ ::foo };
-		let _p: Path = parse_quote!{ bar };
+		let _p: Path = parse_quote! { self };
+		let _p: Path = parse_quote! { crate };
+		let _p: Path = parse_quote! { ::foo };
+		let _p: Path = parse_quote! { bar };
 	}
 }
