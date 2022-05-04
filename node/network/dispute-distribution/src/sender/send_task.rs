@@ -97,6 +97,7 @@ impl TaskResult {
 	}
 }
 
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 impl SendTask {
 	/// Initiates sending a dispute message to peers.
 	pub async fn new<Context>(
@@ -107,10 +108,6 @@ impl SendTask {
 		request: DisputeRequest,
 		metrics: &Metrics,
 	) -> Result<Self>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let mut send_task =
 			Self { request, deliveries: HashMap::new(), has_failed_sends: false, tx };
@@ -129,10 +126,6 @@ impl SendTask {
 		active_sessions: &HashMap<SessionIndex, Hash>,
 		metrics: &Metrics,
 	) -> Result<()>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let new_authorities = self.get_relevant_validators(ctx, runtime, active_sessions).await?;
 
@@ -211,10 +204,6 @@ impl SendTask {
 		runtime: &mut RuntimeInfo,
 		active_sessions: &HashMap<SessionIndex, Hash>,
 	) -> Result<HashSet<AuthorityDiscoveryId>>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let ref_head = self.request.0.candidate_receipt.descriptor.relay_parent;
 		// Retrieve all authorities which participated in the parachain consensus of the session
@@ -254,6 +243,7 @@ impl SendTask {
 /// Start sending of the given message to all given authorities.
 ///
 /// And spawn tasks for handling the response.
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 async fn send_requests<Context>(
 	ctx: &mut Context,
 	tx: mpsc::Sender<TaskFinish>,
@@ -261,10 +251,6 @@ async fn send_requests<Context>(
 	req: DisputeRequest,
 	metrics: &Metrics,
 ) -> Result<HashMap<AuthorityDiscoveryId, DeliveryStatus>>
-where
-	Context: overseer::DisputeDistributionContextTrait,
-	<Context as overseer::DisputeDistributionContextTrait>::Sender:
-		overseer::DisputeDistributionSenderTrait,
 {
 	let mut statuses = HashMap::with_capacity(receivers.len());
 	let mut reqs = Vec::with_capacity(receivers.len());

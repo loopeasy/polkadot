@@ -66,6 +66,8 @@ pub struct DisputeSender {
 	metrics: Metrics,
 }
 
+
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 impl DisputeSender {
 	/// Create a new `DisputeSender` which can be used to start dispute sendings.
 	pub fn new(tx: mpsc::Sender<TaskFinish>, metrics: Metrics) -> Self {
@@ -85,10 +87,6 @@ impl DisputeSender {
 		runtime: &mut RuntimeInfo,
 		msg: DisputeMessage,
 	) -> Result<()>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let req: DisputeRequest = msg.into();
 		let candidate_hash = req.0.candidate_receipt.hash();
@@ -125,10 +123,6 @@ impl DisputeSender {
 		runtime: &mut RuntimeInfo,
 		update: ActiveLeavesUpdate,
 	) -> Result<()>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let ActiveLeavesUpdate { activated, deactivated } = update;
 		let deactivated: HashSet<_> = deactivated.into_iter().collect();
@@ -195,10 +189,6 @@ impl DisputeSender {
 		runtime: &mut RuntimeInfo,
 		dispute: (SessionIndex, CandidateHash),
 	) -> Result<()>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let (session_index, candidate_hash) = dispute;
 		// A relay chain head is required as context for receiving session info information from runtime and
@@ -323,10 +313,6 @@ impl DisputeSender {
 		ctx: &mut Context,
 		runtime: &mut RuntimeInfo,
 	) -> Result<bool>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		let new_sessions = get_active_session_indices(ctx, runtime, &self.active_heads).await?;
 		let new_sessions_raw: HashSet<_> = new_sessions.keys().collect();
@@ -341,15 +327,12 @@ impl DisputeSender {
 /// Retrieve the currently active sessions.
 ///
 /// List is all indices of all active sessions together with the head that was used for the query.
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 async fn get_active_session_indices<Context>(
 	ctx: &mut Context,
 	runtime: &mut RuntimeInfo,
 	active_heads: &Vec<Hash>,
 ) -> Result<HashMap<SessionIndex, Hash>>
-where
-	Context: overseer::DisputeDistributionContextTrait,
-	<Context as overseer::DisputeDistributionContextTrait>::Sender:
-		overseer::DisputeDistributionSenderTrait,
 {
 	let mut indeces = HashMap::new();
 	// Iterate all heads we track as active and fetch the child' session indices.
@@ -361,13 +344,10 @@ where
 }
 
 /// Retrieve Set of active disputes from the dispute coordinator.
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 async fn get_active_disputes<Context>(
 	ctx: &mut Context,
 ) -> JfyiErrorResult<Vec<(SessionIndex, CandidateHash)>>
-where
-	Context: overseer::DisputeDistributionContextTrait,
-	<Context as overseer::DisputeDistributionContextTrait>::Sender:
-		overseer::DisputeDistributionSenderTrait,
 {
 	let (tx, rx) = oneshot::channel();
 	ctx.send_message(DisputeCoordinatorMessage::ActiveDisputes(tx)).await;
@@ -375,15 +355,12 @@ where
 }
 
 /// Get all locally available dispute votes for a given dispute.
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 async fn get_candidate_votes<Context>(
 	ctx: &mut Context,
 	session_index: SessionIndex,
 	candidate_hash: CandidateHash,
 ) -> JfyiErrorResult<Option<CandidateVotes>>
-where
-	Context: overseer::DisputeDistributionContextTrait,
-	<Context as overseer::DisputeDistributionContextTrait>::Sender:
-		overseer::DisputeDistributionSenderTrait,
 {
 	let (tx, rx) = oneshot::channel();
 	ctx.send_message(DisputeCoordinatorMessage::QueryCandidateVotes(

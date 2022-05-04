@@ -114,9 +114,9 @@ pub struct DisputeDistributionSubsystem<AD> {
 	metrics: Metrics,
 }
 
-impl<Context, AD> overseer::Subsystem<Context, SubsystemError> for DisputeDistributionSubsystem<AD>
+#[overseer::subsystem(DisputeDistribution, error = SubsystemError, prefix = self::overseer)]
+impl<Context, AD> DisputeDistributionSubsystem<AD>
 where
-	Context: overseer::DisputeDistributionContextTrait,
 	<Context as overseer::DisputeDistributionContextTrait>::Sender:
 		overseer::DisputeDistributionSenderTrait + Sync + Send,
 	AD: AuthorityDiscovery + Clone,
@@ -131,6 +131,8 @@ where
 	}
 }
 
+
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 impl<AD> DisputeDistributionSubsystem<AD>
 where
 	AD: AuthorityDiscovery + Clone,
@@ -160,10 +162,6 @@ where
 
 	/// Start processing work as passed on from the Overseer.
 	async fn run<Context>(mut self, mut ctx: Context) -> std::result::Result<(), FatalError>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait + Sync + Send,
 	{
 		let receiver = DisputesReceiver::new(
 			ctx.sender().clone(),
@@ -208,10 +206,6 @@ where
 		ctx: &mut Context,
 		signal: OverseerSignal,
 	) -> Result<SignalResult>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		match signal {
 			OverseerSignal::Conclude => return Ok(SignalResult::Conclude),
@@ -229,10 +223,6 @@ where
 		ctx: &mut Context,
 		msg: DisputeDistributionMessage,
 	) -> Result<()>
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		match msg {
 			DisputeDistributionMessage::SendDispute(dispute_msg) =>
@@ -251,15 +241,12 @@ enum MuxedMessage {
 	Sender(Option<TaskFinish>),
 }
 
+#[overseer::contextbounds(DisputeDistribution, prefix = self::overseer)]
 impl MuxedMessage {
 	async fn receive<Context>(
 		ctx: &mut Context,
 		from_sender: &mut mpsc::Receiver<TaskFinish>,
 	) -> Self
-	where
-		Context: overseer::DisputeDistributionContextTrait,
-		<Context as overseer::DisputeDistributionContextTrait>::Sender:
-			overseer::DisputeDistributionSenderTrait,
 	{
 		// We are only fusing here to make `select` happy, in reality we will quit if the stream
 		// ends.
