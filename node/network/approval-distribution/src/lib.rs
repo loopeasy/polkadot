@@ -747,7 +747,7 @@ impl State {
 		Context: overseer::ApprovalDistributionContextTrait,
 		<Context as overseer::ApprovalDistributionContextTrait>::Sender:
 			overseer::ApprovalDistributionSenderTrait,
-		R: CyrptoRng + Rng,
+		R: CryptoRng + Rng,
 	{
 		let block_hash = assignment.block_hash.clone();
 		let validator_index = assignment.validator;
@@ -1757,8 +1757,8 @@ impl ApprovalDistribution {
 	}
 }
 
-#[overseer::subsystem(error=SubsystemError)]
-impl<Context> ApprovalDistribution {
+#[overseer::subsystem(ApprovalDistribution, error=SubsystemError, prefix=self::overseer)]
+impl<Context> ApprovalDistributionSubsystem {
 	fn start(self, ctx: Context) -> SpawnedSubsystem {
 		let future = self.run(ctx).map(|_| Ok(())).boxed();
 
