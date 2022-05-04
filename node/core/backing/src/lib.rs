@@ -46,10 +46,9 @@ use polkadot_primitives::v2::{
 use polkadot_subsystem::{
 	jaeger,
 	messages::{
-		AvailabilityDistributionMessage, AvailabilityStoreMessage,
-		CandidateBackingMessage, CandidateValidationMessage, CollatorProtocolMessage,
-		DisputeCoordinatorMessage, ProvisionableData, ProvisionerMessage, RuntimeApiRequest,
-		StatementDistributionMessage,
+		AvailabilityDistributionMessage, AvailabilityStoreMessage, CandidateBackingMessage,
+		CandidateValidationMessage, CollatorProtocolMessage, DisputeCoordinatorMessage,
+		ProvisionableData, ProvisionerMessage, RuntimeApiRequest, StatementDistributionMessage,
 	},
 	overseer, ActiveLeavesUpdate, FromOverseer, OverseerSignal, PerLeafSpan, SpawnedSubsystem,
 	Stage, SubsystemError,
@@ -134,7 +133,7 @@ impl CandidateBackingSubsystem {
 #[overseer::subsystem(CandidateBacking, error = SubsystemError, prefix = self::overseer)]
 impl<Context> CandidateBackingSubsystem
 where
-Context: Send + Sync,
+	Context: Send + Sync,
 {
 	fn start(self, ctx: Context) -> SpawnedSubsystem {
 		let future = async move {
@@ -153,8 +152,7 @@ async fn run<Context>(
 	mut ctx: Context,
 	keystore: SyncCryptoStorePtr,
 	metrics: Metrics,
-) -> FatalResult<()>
-{
+) -> FatalResult<()> {
 	let (background_validation_tx, mut background_validation_rx) = mpsc::channel(16);
 	let mut jobs = HashMap::new();
 
@@ -186,8 +184,7 @@ async fn run_iteration<Context>(
 	jobs: &mut HashMap<Hash, JobAndSpan<Context>>,
 	background_validation_tx: mpsc::Sender<(Hash, ValidatedCandidateCommand)>,
 	background_validation_rx: &mut mpsc::Receiver<(Hash, ValidatedCandidateCommand)>,
-) -> Result<(), Error>
-{
+) -> Result<(), Error> {
 	loop {
 		futures::select!(
 			validated_command = background_validation_rx.next().fuse() => {
@@ -227,8 +224,7 @@ async fn handle_validated_candidate_command<Context>(
 	jobs: &mut HashMap<Hash, JobAndSpan<Context>>,
 	relay_parent: Hash,
 	command: ValidatedCandidateCommand,
-) -> Result<(), Error>
-{
+) -> Result<(), Error> {
 	if let Some(job) = jobs.get_mut(&relay_parent) {
 		job.job.handle_validated_candidate_command(&job.span, ctx, command).await?;
 	} else {
@@ -244,8 +240,7 @@ async fn handle_communication<Context>(
 	ctx: &mut Context,
 	jobs: &mut HashMap<Hash, JobAndSpan<Context>>,
 	message: CandidateBackingMessage,
-) -> Result<(), Error>
-{
+) -> Result<(), Error> {
 	match message {
 		CandidateBackingMessage::Second(relay_parent, candidate, pov) => {
 			if let Some(job) = jobs.get_mut(&relay_parent) {
@@ -274,8 +269,7 @@ async fn handle_active_leaves_update<Context>(
 	keystore: &SyncCryptoStorePtr,
 	background_validation_tx: &mpsc::Sender<(Hash, ValidatedCandidateCommand)>,
 	metrics: &Metrics,
-) -> Result<(), Error>
-{
+) -> Result<(), Error> {
 	for deactivated in update.deactivated {
 		jobs.remove(&deactivated);
 	}
@@ -567,7 +561,6 @@ fn table_attested_to_backed(
 	})
 }
 
-
 async fn store_available_data(
 	sender: &mut impl overseer::CandidateBackingSenderTrait,
 	n_validators: u32,
@@ -576,14 +569,12 @@ async fn store_available_data(
 ) -> Result<(), Error> {
 	let (tx, rx) = oneshot::channel();
 	sender
-		.send_message(
-			AvailabilityStoreMessage::StoreAvailableData {
-				candidate_hash,
-				n_validators,
-				available_data,
-				tx,
-			}
-		)
+		.send_message(AvailabilityStoreMessage::StoreAvailableData {
+			candidate_hash,
+			n_validators,
+			available_data,
+			tx,
+		})
 		.await;
 
 	let _ = rx.await.map_err(Error::StoreAvailableData)?;
@@ -638,15 +629,13 @@ async fn request_pov(
 ) -> Result<Arc<PoV>, Error> {
 	let (tx, rx) = oneshot::channel();
 	sender
-		.send_message(
-			AvailabilityDistributionMessage::FetchPoV {
-				relay_parent,
-				from_validator,
-				candidate_hash,
-				pov_hash,
-				tx,
-			}
-		)
+		.send_message(AvailabilityDistributionMessage::FetchPoV {
+			relay_parent,
+			from_validator,
+			candidate_hash,
+			pov_hash,
+			tx,
+		})
 		.await;
 
 	let pov = rx.await.map_err(|_| Error::FetchPoV)?;
@@ -711,7 +700,8 @@ async fn validate_and_make_available(
 		PoVData::Ready(pov) => pov,
 		PoVData::FetchFromValidator { from_validator, candidate_hash, pov_hash } => {
 			let _span = span.as_ref().map(|s| s.child("request-pov"));
-			match request_pov(&mut sender, relay_parent, from_validator, candidate_hash, pov_hash).await
+			match request_pov(&mut sender, relay_parent, from_validator, candidate_hash, pov_hash)
+				.await
 			{
 				Err(Error::FetchPoV) => {
 					tx_command
