@@ -257,10 +257,10 @@ impl BitfieldDistribution {
 }
 
 /// Modify the reputation of a peer based on its behavior.
-async fn modify_reputation<Context>(ctx: &mut Context, relay_parent: Hash, peer: PeerId, rep: Rep) {
+async fn modify_reputation(sender: &mut impl overseer::BitfieldDistributionSenderTrait, relay_parent: Hash, peer: PeerId, rep: Rep) {
 	gum::trace!(target: LOG_TARGET, ?relay_parent, ?rep, %peer, "reputation change");
 
-	ctx.send_message(NetworkBridgeMessage::ReportPeer(peer, rep)).await
+	sender.send_message(NetworkBridgeMessage::ReportPeer(peer, rep)).await
 }
 
 /// Distribute a given valid and signature checked bitfield message.
@@ -406,7 +406,7 @@ async fn process_incoming_peer_message<Context>(
 	);
 	// we don't care about this, not part of our view.
 	if !state.view.contains(&relay_parent) {
-		modify_reputation(ctx, relay_parent, origin, COST_NOT_IN_VIEW).await;
+		modify_reputation(ctx.sender(), relay_parent, origin, COST_NOT_IN_VIEW).await;
 		return
 	}
 
@@ -415,7 +415,7 @@ async fn process_incoming_peer_message<Context>(
 	let job_data: &mut _ = if let Some(ref mut job_data) = job_data {
 		job_data
 	} else {
-		modify_reputation(ctx, relay_parent, origin, COST_NOT_IN_VIEW).await;
+		modify_reputation(ctx.sender(), relay_parent, origin, COST_NOT_IN_VIEW).await;
 		return
 	};
 
@@ -432,7 +432,7 @@ async fn process_incoming_peer_message<Context>(
 	let validator_set = &job_data.validator_set;
 	if validator_set.is_empty() {
 		gum::trace!(target: LOG_TARGET, ?relay_parent, ?origin, "Validator set is empty",);
-		modify_reputation(ctx, relay_parent, origin, COST_MISSING_PEER_SESSION_KEY).await;
+		modify_reputation(ctx.sender(), relay_parent, origin, COST_MISSING_PEER_SESSION_KEY).await;
 		return
 	}
 
@@ -442,7 +442,7 @@ async fn process_incoming_peer_message<Context>(
 	let validator = if let Some(validator) = validator_set.get(validator_index.0 as usize) {
 		validator.clone()
 	} else {
-		modify_reputation(ctx, relay_parent, origin, COST_VALIDATOR_INDEX_INVALID).await;
+		modify_reputation(ctx.sender(), relay_parent, origin, COST_VALIDATOR_INDEX_INVALID).await;
 		return
 	};
 
@@ -455,7 +455,7 @@ async fn process_incoming_peer_message<Context>(
 		received_set.insert(validator.clone());
 	} else {
 		gum::trace!(target: LOG_TARGET, ?validator_index, ?origin, "Duplicate message");
-		modify_reputation(ctx, relay_parent, origin, COST_PEER_DUPLICATE_MESSAGE).await;
+		modify_reputation(ctx.sender(), relay_parent, origin, COST_PEER_DUPLICATE_MESSAGE).await;
 		return
 	};
 
@@ -469,13 +469,13 @@ async fn process_incoming_peer_message<Context>(
 			"already received a message for validator",
 		);
 		if old_message.signed_availability.as_unchecked() == &bitfield {
-			modify_reputation(ctx, relay_parent, origin, BENEFIT_VALID_MESSAGE).await;
+			modify_reputation(ctx.sender(), relay_parent, origin, BENEFIT_VALID_MESSAGE).await;
 		}
 		return
 	}
 	let signed_availability = match bitfield.try_into_checked(&signing_context, &validator) {
 		Err(_) => {
-			modify_reputation(ctx, relay_parent, origin, COST_SIGNATURE_INVALID).await;
+			modify_reputation(ctx.sender(), relay_parent, origin, COST_SIGNATURE_INVALID).await;
 			return
 		},
 		Ok(bitfield) => bitfield,
@@ -489,7 +489,7 @@ async fn process_incoming_peer_message<Context>(
 	relay_message(ctx, job_data, &state.gossip_peers, &mut state.peer_views, validator, message)
 		.await;
 
-	modify_reputation(ctx, relay_parent, origin, BENEFIT_VALID_MESSAGE_FIRST).await
+	modify_reputation(ctx.sender(), relay_parent, origin, BENEFIT_VALID_MESSAGE_FIRST).await
 }
 
 /// Deal with network bridge updates and track what needs to be tracked

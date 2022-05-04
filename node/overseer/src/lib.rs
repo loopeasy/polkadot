@@ -493,9 +493,9 @@ pub struct Overseer<SupportsParachains> {
 	availability_store: AvailabilityStore,
 
 	#[subsystem(NetworkBridgeMessage, sends: [
-		ApprovalDistributionMessage,
-		StatementDistributionMessage,
 		BitfieldDistributionMessage,
+		StatementDistributionMessage,
+		ApprovalDistributionMessage,
 		GossipSupportMessage,
 		DisputeDistributionMessage,
 		CollationGenerationMessage,
