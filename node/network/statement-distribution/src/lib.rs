@@ -47,7 +47,7 @@ use polkadot_subsystem::{
 		StatementDistributionMessage,
 	},
 	overseer, ActiveLeavesUpdate, FromOverseer, OverseerSignal, PerLeafSpan, SpawnedSubsystem,
-	SubsystemContext, SubsystemError,
+	SubsystemError,
 };
 
 use futures::{
@@ -1158,7 +1158,11 @@ async fn send_statements<Context>(
 	}
 }
 
-async fn report_peer(sender: &mut impl overseer::StatementDistributionSenderTrait, peer: PeerId, rep: Rep) {
+async fn report_peer(
+	sender: &mut impl overseer::StatementDistributionSenderTrait,
+	peer: PeerId,
+	rep: Rep,
+) {
 	sender.send_message(NetworkBridgeMessage::ReportPeer(peer, rep)).await
 }
 

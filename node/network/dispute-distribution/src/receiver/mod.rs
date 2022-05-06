@@ -42,7 +42,7 @@ use polkadot_node_primitives::DISPUTE_WINDOW;
 use polkadot_node_subsystem_util::{runtime, runtime::RuntimeInfo};
 use polkadot_subsystem::{
 	messages::{DisputeCoordinatorMessage, ImportStatementsResult},
-	overseer, SubsystemSender,
+	overseer,
 };
 
 use crate::{

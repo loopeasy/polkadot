@@ -40,7 +40,7 @@ use sp_blockchain::HeaderBackend;
 use polkadot_primitives::v2::{Block, BlockId};
 use polkadot_subsystem::{
 	messages::ChainApiMessage, overseer, FromOverseer, OverseerSignal, SpawnedSubsystem,
-	SubsystemContext, SubsystemError, SubsystemResult,
+	SubsystemError, SubsystemResult,
 };
 
 mod metrics;

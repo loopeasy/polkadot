@@ -29,8 +29,7 @@ use polkadot_primitives::{
 use polkadot_subsystem::{
 	errors::RuntimeApiError,
 	messages::{RuntimeApiMessage, RuntimeApiRequest as Request},
-	overseer, FromOverseer, OverseerSignal, SpawnedSubsystem, SubsystemContext, SubsystemError,
-	SubsystemResult,
+	overseer, FromOverseer, OverseerSignal, SpawnedSubsystem, SubsystemError, SubsystemResult,
 };
 
 use sp_api::ProvideRuntimeApi;

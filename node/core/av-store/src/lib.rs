@@ -40,8 +40,7 @@ use polkadot_primitives::v2::{
 use polkadot_subsystem::{
 	errors::{ChainApiError, RuntimeApiError},
 	messages::{AvailabilityStoreMessage, ChainApiMessage},
-	overseer, ActiveLeavesUpdate, FromOverseer, OverseerSignal, SpawnedSubsystem, SubsystemContext,
-	SubsystemError,
+	overseer, ActiveLeavesUpdate, FromOverseer, OverseerSignal, SpawnedSubsystem, SubsystemError,
 };
 
 mod metrics;

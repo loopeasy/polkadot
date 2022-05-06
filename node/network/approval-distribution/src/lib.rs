@@ -34,8 +34,7 @@ use polkadot_node_subsystem::{
 		network_bridge_event, ApprovalCheckResult, ApprovalDistributionMessage,
 		ApprovalVotingMessage, AssignmentCheckResult, NetworkBridgeEvent, NetworkBridgeMessage,
 	},
-	overseer, ActiveLeavesUpdate, FromOverseer, OverseerSignal, SpawnedSubsystem, SubsystemContext,
-	SubsystemError,
+	overseer, ActiveLeavesUpdate, FromOverseer, OverseerSignal, SpawnedSubsystem, SubsystemError,
 };
 use polkadot_primitives::v2::{
 	BlockNumber, CandidateIndex, Hash, SessionIndex, ValidatorIndex, ValidatorSignature,
@@ -819,7 +818,8 @@ impl State {
 			);
 			match result {
 				AssignmentCheckResult::Accepted => {
-					modify_reputation(ctx.sender(), peer_id.clone(), BENEFIT_VALID_MESSAGE_FIRST).await;
+					modify_reputation(ctx.sender(), peer_id.clone(), BENEFIT_VALID_MESSAGE_FIRST)
+						.await;
 					entry.knowledge.known_messages.insert(message_subject.clone(), message_kind);
 					if let Some(peer_knowledge) = entry.known_by.get_mut(&peer_id) {
 						peer_knowledge.received.insert(message_subject.clone(), message_kind);
@@ -847,7 +847,8 @@ impl State {
 						?peer_id,
 						"Got an assignment too far in the future",
 					);
-					modify_reputation(ctx.sender(), peer_id, COST_ASSIGNMENT_TOO_FAR_IN_THE_FUTURE).await;
+					modify_reputation(ctx.sender(), peer_id, COST_ASSIGNMENT_TOO_FAR_IN_THE_FUTURE)
+						.await;
 					return
 				},
 				AssignmentCheckResult::Bad(error) => {
@@ -1076,7 +1077,8 @@ impl State {
 			);
 			match result {
 				ApprovalCheckResult::Accepted => {
-					modify_reputation(ctx.sender(), peer_id.clone(), BENEFIT_VALID_MESSAGE_FIRST).await;
+					modify_reputation(ctx.sender(), peer_id.clone(), BENEFIT_VALID_MESSAGE_FIRST)
+						.await;
 
 					entry.knowledge.insert(message_subject.clone(), message_kind);
 					if let Some(peer_knowledge) = entry.known_by.get_mut(&peer_id) {
@@ -1595,7 +1597,11 @@ async fn adjust_required_routing_and_propagate<Context, BlockFilter, RoutingModi
 }
 
 /// Modify the reputation of a peer based on its behavior.
-async fn modify_reputation(sender: &mut impl overseer::ApprovalDistributionSenderTrait, peer_id: PeerId, rep: Rep) {
+async fn modify_reputation(
+	sender: &mut impl overseer::ApprovalDistributionSenderTrait,
+	peer_id: PeerId,
+	rep: Rep,
+) {
 	gum::trace!(
 		target: LOG_TARGET,
 		reputation = ?rep,

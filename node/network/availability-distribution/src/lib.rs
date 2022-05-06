@@ -19,9 +19,9 @@ use futures::{future::Either, FutureExt, StreamExt, TryFutureExt};
 use sp_keystore::SyncCryptoStorePtr;
 
 use polkadot_node_network_protocol::request_response::{v1, IncomingRequestReceiver};
-use polkadot_subsystem::{
+use polkadot_node_subsystem::{
 	messages::AvailabilityDistributionMessage, overseer, FromOverseer, OverseerSignal,
-	SpawnedSubsystem, SubsystemContext, SubsystemError,
+	SpawnedSubsystem, SubsystemError,
 };
 
 /// Error and [`Result`] type for this subsystem.
